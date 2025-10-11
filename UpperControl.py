@@ -32,7 +32,15 @@ class ServoControlApp(QMainWindow):
         # 全局控制
         self.setup_global_control_group()
         layout.addWidget(self.global_control_group)
-        
+
+        # 新增表情控制组
+        self.setup_expression_group()
+        layout.addWidget(self.expression_group)
+
+        # 新增显示模式控制组
+        self.setup_display_mode_group()
+        layout.addWidget(self.display_mode_group)
+
         # 状态显示
         self.status_label = QLabel('未连接')
         layout.addWidget(self.status_label)
@@ -41,7 +49,7 @@ class ServoControlApp(QMainWindow):
         self.connection_group = QGroupBox('连接设置')
         layout = QHBoxLayout()
         
-        self.ip_input = QLineEdit('192.168.1.100')
+        self.ip_input = QLineEdit('192.168.1.3')
         self.port_input = QLineEdit('8080')
         self.connect_btn = QPushButton('连接')
         self.disconnect_btn = QPushButton('断开')
@@ -181,6 +189,63 @@ class ServoControlApp(QMainWindow):
             for i in range(self.SERVO_COUNT):
                 self.servo_spinboxes[i].setValue(90)
                 self.global_spinboxes[i].setValue(90)
+
+    def setup_expression_group(self):
+        self.expression_group = QGroupBox('表情显示控制')
+        grid = QGridLayout()
+
+        # 定义可用表情
+        expressions = ['SMILEY', 'CRYING', 'SLEEPY'] # 与ESP32端定义一致
+
+        # 创建表情按钮
+        self.expression_buttons = []
+        for i, expr in enumerate(expressions):
+            button = QPushButton(expr)
+            button.clicked.connect(lambda checked, e=expr: self.send_expression_command(e))
+            grid.addWidget(button, i // 3, i % 3) # 每行3个按钮
+            self.expression_buttons.append(button)
+
+        # 添加返回状态页按钮
+        self.status_page_btn = QPushButton('显示舵机状态')
+        self.status_page_btn.clicked.connect(self.show_status_page)
+        grid.addWidget(self.status_page_btn, (len(expressions) // 3) + 1, 0, 1, 3) # 跨列
+
+        self.expression_group.setLayout(grid)
+
+    def send_expression_command(self, expression_type):
+        command = f"EXPRESSION,{expression_type}"
+        if self.send_command(command):
+            self.status_label.setText(f'显示表情: {expression_type}')
+
+    def show_status_page(self):
+        # 发送RESET命令会触发ESP32显示默认状态页
+        if self.send_command("RESET"):
+            self.status_label.setText('返回舵机状态显示')
+
+    def setup_display_mode_group(self):
+        self.display_mode_group = QGroupBox('显示模式控制')
+        layout = QHBoxLayout()
+        
+        # 创建模式切换按钮
+        self.clock_btn = QPushButton('时钟模式')
+        self.weather_btn = QPushButton('天气模式')
+        self.status_btn = QPushButton('状态模式')
+        
+        layout.addWidget(self.clock_btn)
+        layout.addWidget(self.weather_btn)
+        layout.addWidget(self.status_btn)
+        
+        self.display_mode_group.setLayout(layout)
+        
+        # 连接按钮信号
+        self.clock_btn.clicked.connect(lambda: self.send_display_mode("CLOCK"))
+        self.weather_btn.clicked.connect(lambda: self.send_display_mode("WEATHER"))
+        self.status_btn.clicked.connect(lambda: self.send_display_mode("STATUS"))
+
+    def send_display_mode(self, mode):
+        command = f"MODE_{mode}"
+        if self.send_command(command):
+            self.status_label.setText(f'切换到{mode}模式')
 
 def main():
     app = QApplication(sys.argv)
