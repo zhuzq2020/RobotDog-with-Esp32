@@ -78,15 +78,14 @@ void updateDisplay() {
     tft.fillScreen(ST77XX_BLACK);
     tft.setTextColor(ST77XX_WHITE);
     tft.setTextSize(2);
-    
-    tft.setCursor(10, 10);
-    tft.println("ServoStatusMonitor");
-    tft.println("===================");
-    
-    tft.setTextSize(1);
+    tft.setCursor(50, 10);
+    tft.println("Servo Monitor");
+    tft.println("====================");
+
+    // 显示IP地址
     tft.setCursor(10, 60);
-    tft.println("Channel Angle");
-    tft.println("-------  -----");
+    tft.setTextSize(1);
+    tft.printf("IP: %s", WiFi.localIP().toString().c_str());
     
     for (int i = 0; i < SERVO_COUNT; i++) {
         tft.setCursor(10, 90 + i * 25);
@@ -98,10 +97,9 @@ void updateDisplay() {
         tft.drawRect(80, 90 + i * 25, 100, 15, ST77XX_WHITE);
     }
     
-    // 显示IP地址
-    tft.setCursor(10, 200);
     tft.setTextSize(1);
-    tft.printf("IP: %s", WiFi.localIP().toString().c_str());
+    tft.setCursor(10, 200);
+    tft.println("MADE BY ZHUZQ");
 }
 
 // 新增表情显示函数
@@ -260,8 +258,8 @@ void setup() {
     tft.fillScreen(ST77XX_BLACK);
     tft.setTextColor(ST77XX_WHITE);
     tft.setTextSize(2);
-    tft.setCursor(10, 10);
-    tft.println("Connect to WiFi...");
+    tft.setCursor(10, 30);
+    tft.println("Connecting to WiFi");
     
     while (WiFi.status() != WL_CONNECTED) {
         delay(1000);
@@ -333,7 +331,7 @@ void processCommand(String command) {
         }
         
         sendAllToLU9685(angles);
-        updateDisplay();
+        // updateDisplay();
     } else {
         int commaPos = command.indexOf(',');
         if (commaPos != -1) {
@@ -342,7 +340,7 @@ void processCommand(String command) {
             
             if (channel < SERVO_COUNT) {
                 sendToLU9685(channel, angle);
-                updateDisplay();
+                // updateDisplay();
             }
         }
     }
